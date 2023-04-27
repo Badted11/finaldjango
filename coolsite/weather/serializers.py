@@ -8,6 +8,8 @@ from .models import Weather
 
 
 class WeatherSerializer(serializers.ModelSerializer):
+
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
     class Meta:
         model = Weather
         fields = "__all__"

@@ -1,64 +1,74 @@
 import requests
 from django.contrib.auth import logout
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth import login
 from django.contrib.auth.views import LoginView
-from django.core.paginator import Paginator
-from django.http import HttpResponse, HttpResponseNotFound, Http404
-from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse, HttpResponseNotFound
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from rest_framework import generics, mixins
+from rest_framework import generics
 from django.shortcuts import render
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.viewsets import GenericViewSet
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser
 from .serializers import WeatherSerializer
 from .forms import *
-from .models import *
+from weather.permissions import IsOwnerOrReadOnly
 from .utils import *
 
+class WeatherAPIList(generics.ListCreateAPIView):
+    queryset = Weather.objects.all()
+    serializer_class = WeatherSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, )
 
-class WeatherViewSet(mixins.CreateModelMixin,
-                   mixins.RetrieveModelMixin,
-                   mixins.UpdateModelMixin,
-                   mixins.ListModelMixin,
-                   GenericViewSet):
+class WeatherAPIUpdate(generics.RetrieveUpdateAPIView):
+    queryset = Weather.objects.all()
+    serializer_class = WeatherSerializer
+    permission_classes = (IsOwnerOrReadOnly, )
+
+
+class WeatherAPIDestroy(generics.RetrieveDestroyAPIView):
     queryset = Weather.objects.all()
     serializer_class = WeatherSerializer
 
+    permission_classes = (IsAdminUser, )
 
-    def get_queryset(self):
-        pk = self.kwargs.get("pk")
-
-        if not pk:
-            return Weather.objects.all()[:3]
-
-        return Weather.objects.filter(pk=pk)
-
-
-    @action(methods=['get'], detail=True)
-    def category(self, request, pk=None):
-        cats = Category.objects.get(pk=pk)
-        return Response({'cats': cats.name})
-
-
-
-
-class WeatherAPIList(generics.ListCreateAPIView):
-   queryset = Weather.objects.all()
-   serializer_class = WeatherSerializer
-
-class WeatherAPIUpdate(generics.UpdateAPIView):
-       queryset = Weather.objects.all()
-       serializer_class = WeatherSerializer
-
-class WeatherAPIDetailView(generics.RetrieveUpdateDestroyAPIView):
-       queryset = Weather.objects.all()
-       serializer_class = WeatherSerializer
+# class WeatherViewSet(mixins.CreateModelMixin,
+#                    mixins.RetrieveModelMixin,
+#                    mixins.UpdateModelMixin,
+#                    mixins.ListModelMixin,
+#                    GenericViewSet):
+#     queryset = Weather.objects.all()
+#     serializer_class = WeatherSerializer
+#
+#
+#     def get_queryset(self):
+#         pk = self.kwargs.get("pk")
+#
+#         if not pk:
+#             return Weather.objects.all()[:3]
+#
+#         return Weather.objects.filter(pk=pk)
+#
+#
+#     @action(methods=['get'], detail=True)
+#     def category(self, request, pk=None):
+#         cats = Category.objects.get(pk=pk)
+#         return Response({'cats': cats.name})
+#
+#
+#
+#
+# class WeatherAPIList(generics.ListCreateAPIView):
+#    queryset = Weather.objects.all()
+#    serializer_class = WeatherSerializer
+#
+# class WeatherAPIUpdate(generics.UpdateAPIView):
+#        queryset = Weather.objects.all()
+#        serializer_class = WeatherSerializer
+#
+# class WeatherAPIDetailView(generics.RetrieveUpdateDestroyAPIView):
+#        queryset = Weather.objects.all()
+#        serializer_class = WeatherSerializer
 
 
 #class WeatherAPIView(APIView):
