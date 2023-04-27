@@ -9,7 +9,8 @@ from django.views.generic import ListView, DetailView, CreateView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from rest_framework import generics
 from django.shortcuts import render
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser, IsAuthenticated
 from .serializers import WeatherSerializer
 from .forms import *
 from weather.permissions import IsOwnerOrReadOnly
@@ -23,8 +24,8 @@ class WeatherAPIList(generics.ListCreateAPIView):
 class WeatherAPIUpdate(generics.RetrieveUpdateAPIView):
     queryset = Weather.objects.all()
     serializer_class = WeatherSerializer
-    permission_classes = (IsOwnerOrReadOnly, )
-
+    permission_classes = (IsAuthenticated, )
+    # authentication_classes = (TokenAuthentication, )
 
 class WeatherAPIDestroy(generics.RetrieveDestroyAPIView):
     queryset = Weather.objects.all()

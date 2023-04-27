@@ -59,13 +59,13 @@ urlpatterns = [
 
     path('captcha/', include('captcha.urls')),
     path('', include('weather.urls')),
-
+    path('api/v1/drf-auth/', include('rest_framework.urls')),
     path('api/v1/drf-auth/', include('rest_framework.urls')),
     path('api/v1/weather/', WeatherAPIList.as_view()),
     path('api/v1/weather/<int:pk>/', WeatherAPIUpdate.as_view()),
-     path('api/v1/weatherdelete/<int:pk>/', WeatherAPIDestroy.as_view()),
-    # path('api/v1/auth/', include('djoser.urls')),  # new
-    # re_path(r'^auth/', include('djoser.urls.authtoken')),  # new
+    path('api/v1/weatherdelete/<int:pk>/', WeatherAPIDestroy.as_view()),
+    path('api/v1/auth/', include('djoser.urls')),  # new
+    re_path(r'^auth/', include('djoser.urls.authtoken')),  # new
     path('api/v1/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/v1/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/v1/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
