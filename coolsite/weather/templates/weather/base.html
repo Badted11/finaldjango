@@ -90,13 +90,13 @@
 
         {% for p in paginator.page_range %}
 		{% if page_obj.number == p %}
-		<div style="display: flex">
+
         <li class="page-num page-num-selected">{{ p }}</li>
 		{% elif p >= page_obj.number|add:-2 and p <= page_obj.number|add:2  %}
         <li class="page-num">
             <a href="?page={{ p }}">{{ p }}</a>
         </li>
-			</div>
+
 		{% endif %}
         {% endfor %}
 
