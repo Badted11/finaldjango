@@ -1,4 +1,6 @@
+import requests
 from django.contrib.auth import logout
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.views import LoginView
@@ -8,11 +10,101 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin
-
+from rest_framework import generics, mixins
+from django.shortcuts import render
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.viewsets import GenericViewSet
+from .serializers import WeatherSerializer
 from .forms import *
 from .models import *
 from .utils import *
 
+
+class WeatherViewSet(mixins.CreateModelMixin,
+                   mixins.RetrieveModelMixin,
+                   mixins.UpdateModelMixin,
+                   mixins.ListModelMixin,
+                   GenericViewSet):
+    queryset = Weather.objects.all()
+    serializer_class = WeatherSerializer
+
+
+    def get_queryset(self):
+        pk = self.kwargs.get("pk")
+
+        if not pk:
+            return Weather.objects.all()[:3]
+
+        return Weather.objects.filter(pk=pk)
+
+
+    @action(methods=['get'], detail=True)
+    def category(self, request, pk=None):
+        cats = Category.objects.get(pk=pk)
+        return Response({'cats': cats.name})
+
+
+
+
+class WeatherAPIList(generics.ListCreateAPIView):
+   queryset = Weather.objects.all()
+   serializer_class = WeatherSerializer
+
+class WeatherAPIUpdate(generics.UpdateAPIView):
+       queryset = Weather.objects.all()
+       serializer_class = WeatherSerializer
+
+class WeatherAPIDetailView(generics.RetrieveUpdateDestroyAPIView):
+       queryset = Weather.objects.all()
+       serializer_class = WeatherSerializer
+
+
+#class WeatherAPIView(APIView):
+#    def get(self, request):
+ #       w = Weather.objects.all()
+ #       return Response({'posts': WeatherSerializer(w, many=True).data})
+
+  #  def post(self, request):
+  #      serializer = WeatherSerializer(data=request.data)
+  #      serializer.is_valid(raise_exception=True)
+
+   #     post_new = Weather.objects.create(
+   #         title=request.data['title'],
+   #         content=request.data['content'],
+   #         cat_id=request.data['cat_id']
+   #     )
+
+   #     return Response({'post': WeatherSerializer(post_new).data})
+
+   # def put(self, request, *args, **kwargs):
+   #     pk = kwargs.get("pk", None)
+   #     if not pk:
+   #         return Response({"error": "Method PUT not allowed"})
+
+    #    try:
+    #        instance = Weather.objects.get(pk=pk)
+    #   except:
+    #        return Response({"error": "Object does not exists"})
+
+#        serializer = WeatherSerializer(data=request.data, instance=instance)
+#        serializer.is_valid(raise_exception=True)
+#        serializer.save()
+ #       return Response({"post": serializer.data})
+
+ #   def delete(self, request, *args, **kwargs):
+ #       pk = kwargs.get("pk", None)
+ #       if not pk:
+ #           return Response({"error": "Method DELETE not allowed"})
+
+        # здесь код для удаления записи с переданным pk
+
+  #      return Response({"post": "delete post " + str(pk)})
+
+#class WeatherAPIView(generics.ListAPIView):
+#    queryset = Weather.objects.all()
+#    serializer_class = WeatherSerializer
 
 menu = [{'title': "О сайте", 'url_name': 'about'},
         {'title': "Добавить статью", 'url_name': 'add_page'},
@@ -54,7 +146,20 @@ class WeatherHome(DataMixin, ListView):
   #  return render(request, 'weather/index.html', context=context)
 
 def about(request):
-    return render(request, 'weather/about.html', {'menu': menu, 'title': 'О сайте'})
+    appid = 'f3245c4c35e5cf5a0d069850d0a238a9'
+    url = 'https://api.openweathermap.org/data/2.5/weather?q={}&units=metric&appid=' + appid
+
+    city = 'London'
+    res = requests.get(url.format(city)).json()
+
+    city_info = {
+        'city': city,
+        'temp': res["main"]["temp"],
+        'icon': res["weather"][0]["icon"]
+    }
+
+    context = {'info': city_info}
+    return render(request, 'weather/about.html', {'menu': menu, 'title': 'Получить информацию о погоде!'})
 
 class AddPage(LoginRequiredMixin, DataMixin, CreateView):
     form_class = AddPostForm
@@ -84,8 +189,8 @@ class AddPage(LoginRequiredMixin, DataMixin, CreateView):
 def contact(request):
     return HttpResponse("Обратная связь")
 
-def login(request):
-    return HttpResponse("Авторизация")
+#def login(request):
+ #   return HttpResponse("Авторизация")
 
 
 def pageNotFound(request, exception):
